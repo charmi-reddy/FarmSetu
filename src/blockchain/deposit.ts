@@ -14,8 +14,12 @@ export const depositAlgo = async (
     );
 
     const params = await algodClient.getTransactionParams().do();
+    
 
     const appAddress = algosdk.getApplicationAddress(appId);
+
+    console.log("App ID:", appId);
+
     console.log("App Address:", appAddress);
 
     // 💰 Txn 1: Payment
@@ -25,13 +29,17 @@ export const depositAlgo = async (
       amount: amount * 1_000_000, // ALGO → microAlgos
       suggestedParams: params,
     });
+    console.log("Receiver being used:", appAddress);
 
     // 📞 Txn 2: App Call
-    const appCallTxn = algosdk.makeApplicationNoOpTxnFromObject({
-      sender,
-      appIndex: appId,
-      suggestedParams: params,
-    });
+const encoder = new TextEncoder();
+
+const appCallTxn = algosdk.makeApplicationNoOpTxnFromObject({
+  sender,
+  appIndex: appId,
+  appArgs: [encoder.encode("deposit")],
+  suggestedParams: params,
+});
 
     // 🔗 GROUP THEM
     const groupID = algosdk.computeGroupID([paymentTxn, appCallTxn]);
@@ -53,7 +61,7 @@ export const depositAlgo = async (
   } catch (error) {
     console.error("Deposit failed:", error);
   }
-  console.log("App ID:", appId);
-console.log("App Address:", algosdk.getApplicationAddress(appId));
+
+  console.log("App Address:", algosdk.getApplicationAddress(appId));
 
 };
