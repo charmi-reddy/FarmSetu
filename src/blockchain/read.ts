@@ -1,33 +1,26 @@
-import algosdk from "algosdk";
+import { getAccountAppLocalState } from "./appLocalState";
 
 export const getSavings = async (
   address: string,
   appId: number
 ): Promise<number> => {
   try {
-    const algodClient = new algosdk.Algodv2(
-      "",
-      "https://testnet-api.algonode.cloud",
-      ""
-    );
-
-    const accountInfo = await algodClient.accountInformation(address).do();
-
-    const appsLocalState = (accountInfo as any)["apps-local-state"] || [];
-
-    const app = appsLocalState.find(
-      (a: any) => a.id === appId
-    );
-
-    if (!app) return 0;
-
-    const keyValue = (app as any)["key-value"] || [];
+    const appLocalState = await getAccountAppLocalState(address, appId);
+    const keyValue = appLocalState?.["key-value"] || [];
 
     for (const item of keyValue) {
-      const key = atob(item.key);
+      const isTotalSavedKey =
+        item.key === "dG90YWxTYXZlZA==" ||
+        item.key === "totalSaved";
 
-      if (key === "totalSaved") {
-        return item.value.uint || 0;
+      if (isTotalSavedKey) {
+        const uintValue = item?.value?.uint;
+
+        if (typeof uintValue === "bigint") return Number(uintValue);
+        if (typeof uintValue === "number") return uintValue;
+        if (typeof uintValue === "string") return Number(uintValue) || 0;
+
+        return 0;
       }
     }
 

@@ -1,49 +1,51 @@
 import algosdk from "algosdk";
+import { getAlgodClient } from "./algodClient";
 
 export const depositAlgo = async (
   sender: string,
   appId: number,
   amount: number,
   peraWallet: any
-) => {
+): Promise<{ txId: string; confirmedRound: number | null }> => {
   try {
-    const algodClient = new algosdk.Algodv2(
-      "",
-      "https://testnet-api.algonode.cloud",
-      ""
-    );
+    if (!Number.isInteger(appId) || appId <= 0) {
+      throw new Error("Invalid App ID");
+    }
 
+    const algodClient = getAlgodClient();
     const params = await algodClient.getTransactionParams().do();
-    
+    const microAlgoAmount = Math.round(amount * 1_000_000);
 
-    const appAddress = algosdk.getApplicationAddress(appId);
+    if (!Number.isFinite(microAlgoAmount) || microAlgoAmount <= 0) {
+      throw new Error("Deposit amount must be greater than 0.");
+    }
 
-    console.log("App ID:", appId);
+    const appAddress = algosdk.getApplicationAddress(appId).toString();
+    if (!algosdk.isValidAddress(appAddress)) {
+      throw new Error("Invalid App Address");
+    }
 
-    console.log("App Address:", appAddress);
-
-    // 💰 Txn 1: Payment
     const paymentTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
       sender,
       receiver: appAddress,
-      amount: amount * 1_000_000, // ALGO → microAlgos
+      amount: microAlgoAmount,
       suggestedParams: params,
     });
-    console.log("Receiver being used:", appAddress);
 
-    // 📞 Txn 2: App Call
-const encoder = new TextEncoder();
+    const depositMethod = new algosdk.ABIMethod({
+      name: "deposit",
+      args: [],
+      returns: { type: "void" },
+    });
 
-const appCallTxn = algosdk.makeApplicationNoOpTxnFromObject({
-  sender,
-  appIndex: appId,
-  appArgs: [encoder.encode("deposit")],
-  suggestedParams: params,
-});
+    const appCallTxn = algosdk.makeApplicationNoOpTxnFromObject({
+      sender,
+      appIndex: appId,
+      appArgs: [depositMethod.getSelector()],
+      suggestedParams: params,
+    });
 
-    // 🔗 GROUP THEM
     const groupID = algosdk.computeGroupID([paymentTxn, appCallTxn]);
-
     paymentTxn.group = groupID;
     appCallTxn.group = groupID;
 
@@ -54,14 +56,22 @@ const appCallTxn = algosdk.makeApplicationNoOpTxnFromObject({
 
     const signedTxn = await peraWallet.signTransaction([txGroup]);
 
-    const txId = await algodClient.sendRawTransaction(signedTxn).do();
+    const txResponse = await algodClient.sendRawTransaction(signedTxn).do();
+    const confirmation = await algosdk.waitForConfirmation(algodClient, txResponse.txid, 4);
 
-    console.log("✅ Deposit success:", txId);
+    console.log("✅ Deposit success:", txResponse.txid);
+
+    const confirmedRound = Number(
+      (confirmation as unknown as { ["confirmed-round"]?: number })["confirmed-round"] ?? 0
+    );
+
+    return {
+      txId: txResponse.txid,
+      confirmedRound: confirmedRound || null,
+    };
 
   } catch (error) {
     console.error("Deposit failed:", error);
+    throw error;
   }
-
-  console.log("App Address:", algosdk.getApplicationAddress(appId));
-
 };

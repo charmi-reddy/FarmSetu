@@ -3,27 +3,42 @@
 
 // @algorandfoundation/algorand-typescript/arc4/index.d.ts::Contract.approvalProgram() -> uint64:
 main:
-    // smart_contracts/savings_vault/contract.algo.ts:3
+    intcblock 1 0
+    bytecblock "totalSaved"
+    // smart_contracts/savings_vault/contract.algo.ts:4
     // export class SavingsVault extends Contract {
     txn NumAppArgs
-    bz main___algots__.defaultCreate@5
-    pushbytes 0x02bece11 // method "hello(string)string"
+    bz main___algots__.defaultCreate@6
+    pushbytess 0x29314d95 0x92e03b1c // method "optIn()void", method "deposit()void"
     txna ApplicationArgs 0
-    match main_hello_route@3
+    match main_optIn_route@3 main_deposit_route@4
     err
 
-main_hello_route@3:
-    // smart_contracts/savings_vault/contract.algo.ts:4
-    // hello(name: string): string {
+main_deposit_route@4:
+    // smart_contracts/savings_vault/contract.algo.ts:16
+    // deposit(): void {
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert // OnCompletion must be NoOp && can only call when not creating
-    b hello
+    b deposit
 
-main___algots__.defaultCreate@5:
-    // smart_contracts/savings_vault/contract.algo.ts:3
+main_optIn_route@3:
+    // smart_contracts/savings_vault/contract.algo.ts:10
+    // @abimethod({ allowActions: ['OptIn', 'NoOp'] })
+    intc_0 // 1
+    txn OnCompletion
+    shl
+    pushint 3 // 3
+    &
+    txn ApplicationID
+    &&
+    assert // OnCompletion must be one of OptIn, NoOp && can only call when not creating
+    b optIn
+
+main___algots__.defaultCreate@6:
+    // smart_contracts/savings_vault/contract.algo.ts:4
     // export class SavingsVault extends Contract {
     txn OnCompletion
     !
@@ -31,41 +46,76 @@ main___algots__.defaultCreate@5:
     !
     &&
     assert // OnCompletion must be NoOp && can only call when creating
-    pushint 1 // 1
+    intc_0 // 1
     return
 
 
-// smart_contracts/savings_vault/contract.algo.ts::SavingsVault.hello[routing]() -> void:
-hello:
-    // smart_contracts/savings_vault/contract.algo.ts:4
-    // hello(name: string): string {
-    txna ApplicationArgs 1
+// smart_contracts/savings_vault/contract.algo.ts::SavingsVault.optIn[routing]() -> void:
+optIn:
+    // smart_contracts/savings_vault/contract.algo.ts:12
+    // this.totalSaved(Txn.sender).value = Uint64(0)
+    txn Sender
+    // smart_contracts/savings_vault/contract.algo.ts:7
+    // totalSaved = LocalState<uint64>()
+    bytec_0 // "totalSaved"
+    // smart_contracts/savings_vault/contract.algo.ts:12
+    // this.totalSaved(Txn.sender).value = Uint64(0)
+    intc_1 // 0
+    app_local_put
+    // smart_contracts/savings_vault/contract.algo.ts:10
+    // @abimethod({ allowActions: ['OptIn', 'NoOp'] })
+    intc_0 // 1
+    return
+
+
+// smart_contracts/savings_vault/contract.algo.ts::SavingsVault.deposit[routing]() -> void:
+deposit:
+    // smart_contracts/savings_vault/contract.algo.ts:19
+    // const paymentTxn = gtxn.PaymentTxn(Txn.groupIndex - 1)
+    txn GroupIndex
+    intc_0 // 1
+    -
     dup
-    pushint 0 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2 // 2
-    +
-    dig 1
-    len
+    gtxns TypeEnum
+    intc_0 // pay
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    // smart_contracts/savings_vault/contract.algo.ts:5
-    // return `Hello, ${name}`
-    pushbytes "Hello, "
-    swap
-    concat
-    // smart_contracts/savings_vault/contract.algo.ts:4
-    // hello(name: string): string {
+    assert // transaction type is pay
+    // smart_contracts/savings_vault/contract.algo.ts:22
+    // assert(paymentTxn.amount > 0)
     dup
-    len
-    itob
-    extract 6 2
+    gtxns Amount
+    dup
+    assert
+    // smart_contracts/savings_vault/contract.algo.ts:23
+    // assert(paymentTxn.receiver === Global.currentApplicationAddress)
     swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    pushint 1 // 1
+    gtxns Receiver
+    global CurrentApplicationAddress
+    ==
+    assert
+    // smart_contracts/savings_vault/contract.algo.ts:26
+    // const current = this.totalSaved(Txn.sender).value
+    txn Sender
+    intc_1 // 0
+    // smart_contracts/savings_vault/contract.algo.ts:7
+    // totalSaved = LocalState<uint64>()
+    bytec_0 // "totalSaved"
+    // smart_contracts/savings_vault/contract.algo.ts:26
+    // const current = this.totalSaved(Txn.sender).value
+    app_local_get_ex
+    assert // check LocalState exists
+    // smart_contracts/savings_vault/contract.algo.ts:27
+    // this.totalSaved(Txn.sender).value = current + paymentTxn.amount
+    +
+    txn Sender
+    // smart_contracts/savings_vault/contract.algo.ts:7
+    // totalSaved = LocalState<uint64>()
+    bytec_0 // "totalSaved"
+    // smart_contracts/savings_vault/contract.algo.ts:27
+    // this.totalSaved(Txn.sender).value = current + paymentTxn.amount
+    uncover 2
+    app_local_put
+    // smart_contracts/savings_vault/contract.algo.ts:16
+    // deposit(): void {
+    intc_0 // 1
     return

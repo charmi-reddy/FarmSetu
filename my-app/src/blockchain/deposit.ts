@@ -6,7 +6,7 @@ export const depositAlgo = async (
   appId: number,
   amount: number,
   peraWallet: any
-) => {
+): Promise<{ txId: string; confirmedRound: number | null }> => {
   try {
     if (!Number.isInteger(appId) || appId <= 0) {
       throw new Error("Invalid App ID");
@@ -88,10 +88,19 @@ export const depositAlgo = async (
     const signedTxn = await peraWallet.signTransaction([txGroup]);
 
     const txResponse = await algodClient.sendRawTransaction(signedTxn).do();
-    await algosdk.waitForConfirmation(algodClient, txResponse.txid, 4);
+    const confirmation = await algosdk.waitForConfirmation(algodClient, txResponse.txid, 4);
 
     console.log("✅ Deposit success:", txResponse.txid);
     console.log("✅ Payment was sent to app address:", appAddress);
+
+    const confirmedRound = Number(
+      (confirmation as unknown as { ["confirmed-round"]?: number })["confirmed-round"] ?? 0
+    );
+
+    return {
+      txId: txResponse.txid,
+      confirmedRound: confirmedRound || null,
+    };
 
   } catch (error) {
     console.error("Deposit failed:", error);
@@ -105,7 +114,4 @@ export const depositAlgo = async (
 
     throw error;
   }
-
-  console.log("App Address:", algosdk.getApplicationAddress(appId));
-
 };
