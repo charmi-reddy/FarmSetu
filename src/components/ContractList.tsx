@@ -76,7 +76,7 @@ function ContractList({
           const canSettle =
             contract.contract_status === "ACCEPTED" &&
             ((userRole === "farmer" && isContractOwner) || (userRole === "buyer" && isBuyer));
-          const canUpdatePrice = isOracle && contract.contract_status !== "SETTLED";
+          const canUpdatePrice = false; // Oracle-only functionality, not exposed to users
           const roleTags = [
             isContractOwner ? "Farmer" : null,
             isBuyer ? "Buyer" : null,
@@ -103,18 +103,21 @@ function ContractList({
                   <p className="mt-1 text-lg font-extrabold text-green-900">{contract.quantity}</p>
                 </div>
                 <div className="rounded-xl border border-green-100 bg-green-50 p-3">
-                  <p className="text-xs font-semibold text-green-700">Agreed Price</p>
-                  <p className="mt-1 text-lg font-extrabold text-green-900">{contract.agreed_price} ALGO</p>
+                  <p className="text-xs font-semibold text-green-700">Agreed Forward Price</p>
+                  <p className="mt-1 text-lg font-extrabold text-green-900">₹{contract.agreed_price.toLocaleString()}</p>
+                  <p className="text-xs text-green-600">🤝 Contract Price (per quintal)</p>
                 </div>
                 <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
-                  <p className="text-xs font-semibold text-emerald-700">Current Price</p>
-                  <p className="mt-1 text-lg font-extrabold text-emerald-900">{contract.current_price} ALGO</p>
+                  <p className="text-xs font-semibold text-emerald-700">Current Market Price</p>
+                  <p className="mt-1 text-lg font-extrabold text-emerald-900">₹{contract.current_price.toLocaleString()}</p>
+                  <p className="text-xs text-emerald-600">📊 Provided by Oracle (per quintal)</p>
                 </div>
                 <div className="rounded-xl border border-lime-100 bg-lime-50 p-3">
-                  <p className="text-xs font-semibold text-lime-700">Total Value</p>
+                  <p className="text-xs font-semibold text-lime-700">Total Contract Value</p>
                   <p className="mt-1 text-lg font-extrabold text-lime-900">
-                    {(contract.quantity * contract.agreed_price).toLocaleString()} ALGO
+                    ₹{(contract.quantity * contract.agreed_price).toLocaleString()}
                   </p>
+                  <p className="text-xs text-lime-600">{contract.quantity} quintals</p>
                 </div>
               </div>
 

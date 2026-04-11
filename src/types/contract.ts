@@ -21,10 +21,10 @@ export interface FarmSetuForwardContract {
 
 export interface CreateContractInput {
   farmerAddress: string;
-  oracleAddress: string;
   cropName: string;
   quantity: number;
   agreedPrice: number;
+  state: string;
 }
 
 export interface AcceptContractInput {

@@ -227,6 +227,26 @@ int 2
 app_global_put
 
 settle_pay:
+byte "SG"
+app_global_get
+int 0
+==
+bnz prices_equal
+
+byte "SG"
+app_global_get
+int 1
+==
+bnz farmer_wins
+
+byte "SG"
+app_global_get
+int 2
+==
+bnz buyer_wins
+
+prices_equal:
+; Prices are equal - return deposit to farmer
 itxn_begin
 int pay
 itxn_field TypeEnum
@@ -239,7 +259,62 @@ itxn_field Amount
 int 0
 itxn_field Fee
 itxn_submit
+b settlement_complete
 
+farmer_wins:
+; Current price > agreed price - farmer gets deposit + settlement amount
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "FA"
+app_global_get
+itxn_field Receiver
+byte "DP"
+app_global_get
+byte "SA"
+app_global_get
++
+itxn_field Amount
+int 0
+itxn_field Fee
+itxn_submit
+b settlement_complete
+
+buyer_wins:
+; Agreed price > current price - buyer gets settlement amount, farmer gets deposit - settlement amount
+; First pay settlement amount to buyer
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "BA"
+app_global_get
+itxn_field Receiver
+byte "SA"
+app_global_get
+itxn_field Amount
+int 0
+itxn_field Fee
+itxn_submit
+
+; Then pay remaining deposit back to farmer
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "FA"
+app_global_get
+itxn_field Receiver
+byte "DP"
+app_global_get
+byte "SA"
+app_global_get
+-
+itxn_field Amount
+int 0
+itxn_field Fee
+itxn_submit
+b settlement_complete
+
+settlement_complete:
 byte "ST"
 int 3
 app_global_put

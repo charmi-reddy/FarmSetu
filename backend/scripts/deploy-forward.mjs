@@ -10,7 +10,7 @@ const algodServer = process.env.ALGOD_SERVER || "https://testnet-api.algonode.cl
 const algodToken = process.env.ALGOD_TOKEN || "";
 const algodPort = process.env.ALGOD_PORT || "";
 const creatorMnemonic = process.env.CREATOR_MNEMONIC || "";
-const oracleAddress = process.env.ORACLE_ADDRESS || "";
+const oracleAddress = "O3TRKXNGG3B2GRU3ZJKAC2CCFGOPZKEMT4ECXUOAIQCDEOLQ4HX3VJO6TY"; // Standardized FarmSetu oracle
 const cropName = process.env.CROP_NAME || "WHEAT";
 const quantity = Number(process.env.QUANTITY || "100");
 const agreedPrice = Number(process.env.AGREED_PRICE || "10");
@@ -18,9 +18,6 @@ const agreedPriceMicro = Math.round(agreedPrice * 1_000_000);
 
 if (!creatorMnemonic) {
   throw new Error("Missing CREATOR_MNEMONIC");
-}
-if (!oracleAddress) {
-  throw new Error("Missing ORACLE_ADDRESS");
 }
 if (!Number.isFinite(agreedPrice) || agreedPrice <= 0) {
   throw new Error("AGREED_PRICE must be a positive number in ALGO");

@@ -38,15 +38,22 @@ function SettleContractModal({ contract, onSettle, onClose }: SettleContractModa
 
           <div className="mt-4 rounded-xl border border-green-100 bg-green-50 p-4 text-sm">
             <div className="flex justify-between"><span className="text-slate-600">Crop:</span><span className="font-semibold">{contract.crop_name}</span></div>
-            <div className="mt-2 flex justify-between"><span className="text-slate-600">Quantity:</span><span className="font-semibold">{contract.quantity} units</span></div>
-            <div className="mt-2 flex justify-between"><span className="text-slate-600">Agreed Price:</span><span className="font-semibold">{contract.agreed_price} ALGO</span></div>
-            <div className="mt-2 flex justify-between"><span className="text-slate-600">Current Price:</span><span className="font-semibold">{contract.current_price} ALGO</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-slate-600">Quantity:</span><span className="font-semibold">{contract.quantity} quintals</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-slate-600">Agreed Price:</span><span className="font-semibold">₹{contract.agreed_price.toLocaleString()} per quintal</span></div>
+            <div className="mt-2 flex justify-between"><span className="text-slate-600">Current Price:</span><span className="font-semibold">₹{contract.current_price.toLocaleString()} per quintal</span></div>
             <div className="mt-3 border-t border-green-200 pt-2 flex justify-between font-bold">
               <span>Settlement Amount:</span>
               <span className={settlementAmount >= 0 ? "text-emerald-700" : "text-red-700"}>
                 {settlementAmount > 0 ? "+" : ""}
-                {settlementAmount} ALGO
+                ₹{Math.abs(settlementAmount).toLocaleString()}
               </span>
+            </div>
+            <div className="mt-1 text-xs text-slate-500">
+              {settlementAmount > 0
+                ? "Farmer receives this amount (prices rose)"
+                : settlementAmount < 0
+                ? "Buyer receives this amount (prices fell)"
+                : "No payment (prices unchanged)"}
             </div>
           </div>
 

@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
 import type { UseWalletResult } from "../hooks/useWallet";
 import { useContracts } from "../hooks/useContracts";
+import { useAuth } from "../hooks/useAuth";
 import CreateContractForm from "../components/CreateContractForm";
 import ContractList from "../components/ContractList";
 import TransactionHistory from "../components/TransactionHistory";
 
 interface DashboardProps {
-  userRole: "farmer" | "buyer" | null;
   wallet: UseWalletResult;
 }
 
-function Dashboard({ userRole, wallet }: DashboardProps) {
+function Dashboard({ wallet }: DashboardProps) {
+  const { userRole, userAddress, logout } = useAuth();
   const contracts = useContracts(wallet.wallet || null, wallet.accountAddress);
   const { loadContracts } = contracts;
-  const [currentRole, setCurrentRole] = useState<"farmer" | "buyer">(userRole ?? "farmer");
   const [activeTab, setActiveTab] = useState<"create" | "list" | "transactions">("list");
 
   useEffect(() => {
@@ -38,7 +38,7 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
 
   const tabBase = "fs-tab";
   const active = `${tabBase} fs-tab-active`;
-  const safeActiveTab = currentRole !== "farmer" && activeTab === "create" ? "list" : activeTab;
+  const safeActiveTab = userRole !== "farmer" && activeTab === "create" ? "list" : activeTab;
 
   return (
     <div className="min-h-screen py-8">
@@ -47,42 +47,23 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900">FarmSetu Dashboard</h1>
             <p className="mt-1 text-sm font-semibold text-green-700">
-              {currentRole === "farmer" ? "Farmer Workspace" : "Buyer Workspace"}
+              {userRole === "farmer" ? "Farmer Workspace" : "Buyer Workspace"}
             </p>
           </div>
-          <div className="text-sm sm:text-right">
-            <div className="mb-2 inline-flex rounded-full border border-green-200 bg-green-50 p-1">
-              <button
-                onClick={() => setCurrentRole("farmer")}
-                className={`rounded-full px-3 py-1 text-xs font-bold ${
-                  currentRole === "farmer"
-                    ? "bg-white text-green-700 shadow"
-                    : "text-slate-600"
-                }`}
-              >
-                Farmer
-              </button>
-              <button
-                onClick={() => setCurrentRole("buyer")}
-                className={`rounded-full px-3 py-1 text-xs font-bold ${
-                  currentRole === "buyer"
-                    ? "bg-white text-green-700 shadow"
-                    : "text-slate-600"
-                }`}
-              >
-                Buyer
-              </button>
+          <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+            <div className="text-sm">
+              <p className="font-semibold text-slate-700">
+                {userAddress
+                  ? `${userAddress.slice(0, 10)}...${userAddress.slice(-8)}`
+                  : "Not connected"}
+              </p>
+              <p className="text-xs text-slate-500 capitalize">{userRole}</p>
             </div>
-            <p className="font-semibold text-slate-700">
-              {wallet.accountAddress
-                ? `${wallet.accountAddress.slice(0, 10)}...${wallet.accountAddress.slice(-8)}`
-                : "Not connected"}
-            </p>
             <button
-              onClick={() => void wallet.disconnect()}
-              className="fs-btn fs-btn-secondary mt-2 px-4 py-2 text-xs"
+              onClick={logout}
+              className="fs-btn fs-btn-secondary px-4 py-2 text-sm"
             >
-              Disconnect
+              Logout
             </button>
           </div>
         </div>
@@ -97,7 +78,7 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
 
         <div className="fs-card mb-6 rounded-2xl p-3">
           <nav className="flex flex-wrap items-center gap-2">
-            {currentRole === "farmer" && (
+            {userRole === "farmer" && (
               <button
                 onClick={() => setActiveTab("create")}
                 className={safeActiveTab === "create" ? active : tabBase}
@@ -109,7 +90,7 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
               onClick={() => setActiveTab("list")}
               className={safeActiveTab === "list" ? active : tabBase}
             >
-              {currentRole === "farmer" ? "My Contracts" : "Available Contracts"} (
+              {userRole === "farmer" ? "My Contracts" : "Available Contracts"} (
               {contracts.contracts.length})
             </button>
             <button
@@ -121,7 +102,7 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
           </nav>
         </div>
 
-        {safeActiveTab === "create" && currentRole === "farmer" && (
+        {safeActiveTab === "create" && userRole === "farmer" && (
           <CreateContractForm
             onSubmit={contracts.create}
             isLoading={contracts.isLoading}
@@ -134,7 +115,7 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
             contracts={contracts.contracts}
             isLoading={contracts.isLoading}
             userAddress={wallet.accountAddress || ""}
-            userRole={currentRole}
+            userRole={userRole || undefined}
             onAccept={contracts.accept}
             onSettle={contracts.settle}
             onUpdatePrice={contracts.updatePrice}

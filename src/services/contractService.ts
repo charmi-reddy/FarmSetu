@@ -7,7 +7,7 @@ import type {
   FarmSetuForwardContract,
 } from "../types/contract";
 import type { WalletInstance } from "../hooks/useWallet";
-import { algodClient, FORWARD_APP_ID, indexerClient, isOnChainMode } from "./networkConfig";
+import { algodClient, FORWARD_APP_ID, indexerClient, isOnChainMode, ORACLE_ADDRESS } from "./networkConfig";
 import { FORWARD_APPROVAL_TEAL, FORWARD_CLEAR_TEAL } from "./tealSources";
 import { algoToMicroAlgos, microAlgosToAlgo } from "../utils/units";
 
@@ -169,7 +169,6 @@ async function createForwardContractOnChain(
   userAddress: string
 ): Promise<{ appId: number; txnId: string; confirmedRound?: number }> {
   ensureAddress(userAddress, "User address");
-  ensureAddress(input.oracleAddress, "Oracle address");
   const { approvalProgram, clearProgram } = await ensureCompiledPrograms();
 
   const params = await algodClient.getTransactionParams().do();
@@ -185,7 +184,7 @@ async function createForwardContractOnChain(
     onComplete: algosdk.OnApplicationComplete.NoOpOC,
     appArgs: [
       textEncoder.encode("create"),
-      algosdk.decodeAddress(input.oracleAddress).publicKey,
+      algosdk.decodeAddress(ORACLE_ADDRESS).publicKey,
       textEncoder.encode(input.cropName),
       algosdk.encodeUint64(input.quantity),
       algosdk.encodeUint64(agreedPriceMicro),
@@ -321,7 +320,7 @@ async function createForwardContractLocal(
     appId,
     farmer_address: input.farmerAddress,
     buyer_address: null,
-    oracle_address: input.oracleAddress,
+    oracle_address: ORACLE_ADDRESS,
     crop_name: input.cropName,
     quantity: input.quantity,
     agreed_price: input.agreedPrice,

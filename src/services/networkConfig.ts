@@ -14,6 +14,9 @@ const indexerPort = import.meta.env.VITE_INDEXER_PORT || "";
 export const CONTRACT_MODE = (import.meta.env.VITE_CONTRACT_MODE || "local").toLowerCase();
 export const FORWARD_APP_ID = Number(import.meta.env.VITE_FORWARD_APP_ID || 0);
 
+// Standardized oracle address for all FarmSetu contracts
+export const ORACLE_ADDRESS = "O3TRKXNGG3B2GRU3ZJKAC2CCFGOPZKEMT4ECXUOAIQCDEOLQ4HX3VJO6TY";
+
 export const algodClient = new algosdk.Algodv2(algodToken, algodServer, algodPort);
 export const indexerClient = new algosdk.Indexer(indexerToken, indexerServer, indexerPort);
 

@@ -57,6 +57,7 @@ Thumbs.db
 .algokit/
 debug_traces/
 artifacts/
+**/artifacts/
 **/smart_contracts/artifacts/
 
 # Editor/IDE
