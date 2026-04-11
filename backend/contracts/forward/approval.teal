@@ -1,0 +1,247 @@
+#pragma version 8
+txn ApplicationID
+int 0
+==
+bnz create_app
+
+txn OnCompletion
+int NoOp
+==
+bnz handle_noop
+
+int 0
+return
+
+create_app:
+txn NumAppArgs
+int 5
+==
+assert
+txna ApplicationArgs 0
+byte "create"
+==
+assert
+
+byte "FA"
+txn Sender
+app_global_put
+
+byte "OA"
+txna ApplicationArgs 1
+app_global_put
+
+byte "CN"
+txna ApplicationArgs 2
+app_global_put
+
+byte "Q"
+txna ApplicationArgs 3
+btoi
+app_global_put
+
+byte "AP"
+txna ApplicationArgs 4
+btoi
+app_global_put
+
+byte "CP"
+txna ApplicationArgs 4
+btoi
+app_global_put
+
+byte "DP"
+int 0
+app_global_put
+
+byte "SA"
+int 0
+app_global_put
+
+byte "SG"
+int 0
+app_global_put
+
+byte "ST"
+int 1
+app_global_put
+
+byte "BA"
+global ZeroAddress
+app_global_put
+
+int 1
+return
+
+handle_noop:
+txna ApplicationArgs 0
+byte "accept"
+==
+bnz accept_contract
+
+txna ApplicationArgs 0
+byte "update_price"
+==
+bnz update_price
+
+txna ApplicationArgs 0
+byte "settle"
+==
+bnz settle_contract
+
+int 0
+return
+
+accept_contract:
+byte "ST"
+app_global_get
+int 1
+==
+assert
+global GroupSize
+int 2
+==
+assert
+gtxn 0 TypeEnum
+int pay
+==
+assert
+gtxn 0 Receiver
+global CurrentApplicationAddress
+==
+assert
+gtxn 0 Sender
+txn Sender
+==
+assert
+byte "Q"
+app_global_get
+byte "AP"
+app_global_get
+*
+gtxn 0 Amount
+<=
+assert
+
+byte "BA"
+txn Sender
+app_global_put
+byte "DP"
+gtxn 0 Amount
+app_global_put
+byte "ST"
+int 2
+app_global_put
+int 1
+return
+
+update_price:
+txn NumAppArgs
+int 2
+==
+assert
+txn Sender
+byte "OA"
+app_global_get
+==
+assert
+byte "ST"
+app_global_get
+int 3
+<
+assert
+byte "CP"
+txna ApplicationArgs 1
+btoi
+app_global_put
+int 1
+return
+
+settle_contract:
+byte "ST"
+app_global_get
+int 2
+==
+assert
+txn Sender
+byte "FA"
+app_global_get
+==
+txn Sender
+byte "BA"
+app_global_get
+==
+||
+assert
+
+byte "CP"
+app_global_get
+byte "AP"
+app_global_get
+>
+bnz cp_gt_ap
+
+byte "AP"
+app_global_get
+byte "CP"
+app_global_get
+>
+bnz ap_gt_cp
+
+byte "SA"
+int 0
+app_global_put
+byte "SG"
+int 0
+app_global_put
+b settle_pay
+
+cp_gt_ap:
+byte "SA"
+byte "CP"
+app_global_get
+byte "AP"
+app_global_get
+-
+byte "Q"
+app_global_get
+*
+app_global_put
+byte "SG"
+int 1
+app_global_put
+b settle_pay
+
+ap_gt_cp:
+byte "SA"
+byte "AP"
+app_global_get
+byte "CP"
+app_global_get
+-
+byte "Q"
+app_global_get
+*
+app_global_put
+byte "SG"
+int 2
+app_global_put
+
+settle_pay:
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "FA"
+app_global_get
+itxn_field Receiver
+byte "DP"
+app_global_get
+itxn_field Amount
+int 0
+itxn_field Fee
+itxn_submit
+
+byte "ST"
+int 3
+app_global_put
+int 1
+return

@@ -12,26 +12,15 @@ interface DashboardProps {
 
 function Dashboard({ userRole, wallet }: DashboardProps) {
   const contracts = useContracts(wallet.wallet || null, wallet.accountAddress);
+  const { loadContracts } = contracts;
   const [currentRole, setCurrentRole] = useState<"farmer" | "buyer">(userRole ?? "farmer");
   const [activeTab, setActiveTab] = useState<"create" | "list" | "transactions">("list");
 
   useEffect(() => {
     if (wallet.isConnected) {
-      void contracts.loadContracts();
+      void loadContracts();
     }
-  }, [wallet.isConnected, wallet.accountAddress]);
-
-  useEffect(() => {
-    if (userRole) {
-      setCurrentRole(userRole);
-    }
-  }, [userRole]);
-
-  useEffect(() => {
-    if (currentRole !== "farmer" && activeTab === "create") {
-      setActiveTab("list");
-    }
-  }, [currentRole, activeTab]);
+  }, [wallet.isConnected, wallet.accountAddress, loadContracts]);
 
   if (wallet.isLoading || !wallet.isConnected) {
     return (
@@ -49,6 +38,7 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
 
   const tabBase = "fs-tab";
   const active = `${tabBase} fs-tab-active`;
+  const safeActiveTab = currentRole !== "farmer" && activeTab === "create" ? "list" : activeTab;
 
   return (
     <div className="min-h-screen py-8">
@@ -110,28 +100,28 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
             {currentRole === "farmer" && (
               <button
                 onClick={() => setActiveTab("create")}
-                className={activeTab === "create" ? active : tabBase}
+                className={safeActiveTab === "create" ? active : tabBase}
               >
                 Create Contract
               </button>
             )}
             <button
               onClick={() => setActiveTab("list")}
-              className={activeTab === "list" ? active : tabBase}
+              className={safeActiveTab === "list" ? active : tabBase}
             >
               {currentRole === "farmer" ? "My Contracts" : "Available Contracts"} (
               {contracts.contracts.length})
             </button>
             <button
               onClick={() => setActiveTab("transactions")}
-              className={activeTab === "transactions" ? active : tabBase}
+              className={safeActiveTab === "transactions" ? active : tabBase}
             >
               Transactions
             </button>
           </nav>
         </div>
 
-        {activeTab === "create" && currentRole === "farmer" && (
+        {safeActiveTab === "create" && currentRole === "farmer" && (
           <CreateContractForm
             onSubmit={contracts.create}
             isLoading={contracts.isLoading}
@@ -139,7 +129,7 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
           />
         )}
 
-        {activeTab === "list" && (
+        {safeActiveTab === "list" && (
           <ContractList
             contracts={contracts.contracts}
             isLoading={contracts.isLoading}
@@ -150,7 +140,7 @@ function Dashboard({ userRole, wallet }: DashboardProps) {
           />
         )}
 
-        {activeTab === "transactions" && (
+        {safeActiveTab === "transactions" && (
           <TransactionHistory transactions={contracts.transactions} />
         )}
       </main>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { Transaction } from "algosdk";
 
 type WalletConnector = {
   on: (event: "disconnect", listener: () => void) => void;
@@ -8,8 +9,18 @@ export type WalletInstance = {
   connect: () => Promise<string[]>;
   reconnectSession: () => Promise<string[]>;
   disconnect: () => Promise<void>;
+  signTransaction: (
+    txGroups: Array<Array<{ txn: Transaction; signers?: string[]; authAddr?: string }>>,
+    signerAddress?: string
+  ) => Promise<Uint8Array[]>;
   connector?: WalletConnector | null;
 };
+
+export type WalletSignRequest = Array<{
+  txn: Transaction;
+  signers?: string[];
+  authAddr?: string;
+}>;
 
 export type UseWalletResult = {
   accountAddress: string | null;
@@ -19,7 +30,8 @@ export type UseWalletResult = {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signTransaction: (
-    txn: any // eslint-disable-line @typescript-eslint/no-explicit-any
+    txns: WalletSignRequest,
+    signerAddress?: string
   ) => Promise<Uint8Array[]>;
   wallet: WalletInstance | null;
 };
@@ -113,16 +125,18 @@ export function useWallet(): UseWalletResult {
    * Sign transaction(s)
    */
   async function signTransaction(
-    txn: any // eslint-disable-line @typescript-eslint/no-explicit-any
+    txns: WalletSignRequest,
+    signerAddress?: string
   ): Promise<Uint8Array[]> {
     const wallet = walletRef.current;
     if (!wallet) {
       throw new Error("Wallet not initialized");
     }
+    if (!Array.isArray(txns) || txns.length === 0) {
+      throw new Error("No transactions provided for signing");
+    }
 
-    // Mock implementation for now
-    console.log("Signing transaction:", txn);
-    return [];
+    return wallet.signTransaction([txns], signerAddress);
   }
 
   /**
