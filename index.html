@@ -4,14 +4,73 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fortuna - Savings Vault</title>
-    <script>
-      window.global = window;
-      window.globalThis = window;
-    </script>
+
+    <!-- Primary Meta Tags -->
+    <title>FarmSetu - Decentralized Forward Contract Platform</title>
+    <meta name="title" content="FarmSetu - Decentralized Forward Contract Platform" />
+    <meta
+      name="description"
+      content="Secure crop prices with blockchain technology. Connect farmers directly with buyers through transparent forward contracts on Algorand."
+    />
+    <meta
+      name="keywords"
+      content="farmsetu, forward contracts, agriculture, blockchain, algorand, farmers, buyers, crop prices, decentralized"
+    />
+    <meta name="author" content="FarmSetu" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://farmsetu.app/" />
+    <meta property="og:title" content="FarmSetu - Decentralized Forward Contract Platform" />
+    <meta
+      property="og:description"
+      content="Secure crop prices with blockchain technology. Connect farmers directly with buyers through transparent forward contracts on Algorand."
+    />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://farmsetu.app/" />
+    <meta property="twitter:title" content="FarmSetu - Decentralized Forward Contract Platform" />
+    <meta
+      property="twitter:description"
+      content="Secure crop prices with blockchain technology. Connect farmers directly with buyers through transparent forward contracts on Algorand."
+    />
+    <meta property="twitter:image" content="/og-image.png" />
+
+    <!-- Theme and App -->
+    <meta name="theme-color" content="#16a34a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="FarmSetu" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading FarmSetu</div>
+        <div class="loading-subtitle">Initializing blockchain connection</div>
+        <button id="skip-loading" class="loading-action-btn" type="button">Enter Platform</button>
+      </div>
+    </div>
+
+    <!-- React Root -->
     <div id="root"></div>
+
+    <script src="/script.js"></script>
+    <!-- Main App Script -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
