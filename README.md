@@ -24,6 +24,7 @@ cp .env.example .env.local
 ```
 
 Set `VITE_CONTRACT_MODE=local` for mock mode, or `VITE_CONTRACT_MODE=onchain` and set `VITE_FORWARD_APP_ID`.
+Optional: set `VITE_EXPLORER_BASE_URL` for transaction/app links in history.
 
 ### 3. Run Development Server
 ```bash

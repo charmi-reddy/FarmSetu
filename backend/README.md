@@ -22,7 +22,7 @@ $env:CREATOR_MNEMONIC="your 25-word mnemonic"
 $env:ORACLE_ADDRESS="YOUR_ORACLE_ALGORAND_ADDRESS"
 $env:CROP_NAME="WHEAT"
 $env:QUANTITY="100"
-$env:AGREED_PRICE="10"
+$env:AGREED_PRICE="10" # ALGO
 node backend/scripts/deploy-forward.mjs
 ```
 
@@ -40,13 +40,27 @@ VITE_INDEXER_URL=https://testnet-idx.algonode.cloud
 ```powershell
 $env:ORACLE_MNEMONIC="oracle 25-word mnemonic"
 $env:APP_ID="<APP_ID>"
-$env:CURRENT_PRICE="12"
+$env:CURRENT_PRICE="12" # ALGO
 node backend/oracle/update-price.mjs
+```
+
+## 4) Run End-to-End Script
+
+```powershell
+$env:FARMER_MNEMONIC="farmer 25-word mnemonic"
+$env:BUYER_MNEMONIC="buyer 25-word mnemonic"
+$env:ORACLE_MNEMONIC="oracle 25-word mnemonic"
+$env:CROP_NAME="WHEAT"
+$env:QUANTITY="100"
+$env:AGREED_PRICE="10"  # ALGO
+$env:UPDATED_PRICE="12" # ALGO
+npm run e2e:forward
 ```
 
 ## Notes
 
 - This is a minimal MVP core: create, accept (with deposit), oracle update, settle.
+- Price fields are entered as ALGO in scripts/UI and converted to microALGO on-chain.
 - Frontend service is now dual-mode:
   - `VITE_CONTRACT_MODE=local` for mock/testing
   - `VITE_CONTRACT_MODE=onchain` for real Algorand calls

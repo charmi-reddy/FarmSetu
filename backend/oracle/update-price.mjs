@@ -6,6 +6,7 @@ const algodPort = process.env.ALGOD_PORT || "";
 const oracleMnemonic = process.env.ORACLE_MNEMONIC || "";
 const appId = Number(process.env.APP_ID || "0");
 const currentPrice = Number(process.env.CURRENT_PRICE || "0");
+const currentPriceMicro = Math.round(currentPrice * 1_000_000);
 
 if (!oracleMnemonic) {
   throw new Error("Missing ORACLE_MNEMONIC");
@@ -24,7 +25,7 @@ const params = await algod.getTransactionParams().do();
 const txn = algosdk.makeApplicationNoOpTxnFromObject({
   sender: oracle.addr,
   appIndex: appId,
-  appArgs: [new TextEncoder().encode("update_price"), algosdk.encodeUint64(currentPrice)],
+  appArgs: [new TextEncoder().encode("update_price"), algosdk.encodeUint64(currentPriceMicro)],
   suggestedParams: params,
 });
 

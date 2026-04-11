@@ -14,12 +14,16 @@ const oracleAddress = process.env.ORACLE_ADDRESS || "";
 const cropName = process.env.CROP_NAME || "WHEAT";
 const quantity = Number(process.env.QUANTITY || "100");
 const agreedPrice = Number(process.env.AGREED_PRICE || "10");
+const agreedPriceMicro = Math.round(agreedPrice * 1_000_000);
 
 if (!creatorMnemonic) {
   throw new Error("Missing CREATOR_MNEMONIC");
 }
 if (!oracleAddress) {
   throw new Error("Missing ORACLE_ADDRESS");
+}
+if (!Number.isFinite(agreedPrice) || agreedPrice <= 0) {
+  throw new Error("AGREED_PRICE must be a positive number in ALGO");
 }
 
 const algod = new algosdk.Algodv2(algodToken, algodServer, algodPort);
@@ -53,7 +57,7 @@ const txn = algosdk.makeApplicationCreateTxnFromObject({
     algosdk.decodeAddress(oracleAddress).publicKey,
     new TextEncoder().encode(cropName),
     algosdk.encodeUint64(quantity),
-    algosdk.encodeUint64(agreedPrice),
+    algosdk.encodeUint64(agreedPriceMicro),
   ],
   suggestedParams: params,
 });
@@ -67,3 +71,4 @@ console.log("Forward contract deployed");
 console.log(`APP_ID=${appId}`);
 console.log(`CREATOR=${creator.addr}`);
 console.log(`ORACLE=${oracleAddress}`);
+console.log(`AGREED_PRICE_ALGO=${agreedPrice}`);

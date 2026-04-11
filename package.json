@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "e2e:forward": "node backend/scripts/e2e-forward.mjs"
   },
   "dependencies": {
     "@algorandfoundation/algokit-utils": "^9.2.0",

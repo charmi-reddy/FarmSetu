@@ -9,6 +9,7 @@ import type {
 import type { WalletInstance } from "../hooks/useWallet";
 import { algodClient, FORWARD_APP_ID, indexerClient, isOnChainMode } from "./networkConfig";
 import { FORWARD_APPROVAL_TEAL, FORWARD_CLEAR_TEAL } from "./tealSources";
+import { algoToMicroAlgos, microAlgosToAlgo } from "../utils/units";
 
 const STORAGE_KEY = "farmsetu_contracts";
 const NEXT_ID_KEY = "farmsetu_next_contract_id";
@@ -143,10 +144,10 @@ function parseGlobalState(
     oracle_address: bytesToAddress("OA") || "",
     crop_name: decodeCrop(),
     quantity: getUInt("Q"),
-    agreed_price: getUInt("AP"),
-    deposited_amount: getUInt("DP"),
-    current_price: getUInt("CP"),
-    settlement_amount: getUInt("SA"),
+    agreed_price: microAlgosToAlgo(getUInt("AP")),
+    deposited_amount: microAlgosToAlgo(getUInt("DP")),
+    current_price: microAlgosToAlgo(getUInt("CP")),
+    settlement_amount: microAlgosToAlgo(getUInt("SA")),
     contract_status: appStatusFromNumber(getUInt("ST")),
   };
 }
@@ -167,6 +168,7 @@ async function createForwardContractOnChain(
   const { approvalProgram, clearProgram } = await ensureCompiledPrograms();
 
   const params = await algodClient.getTransactionParams().do();
+  const agreedPriceMicro = algoToMicroAlgos(input.agreedPrice);
   const createTxn = algosdk.makeApplicationCreateTxnFromObject({
     sender: userAddress,
     approvalProgram,
@@ -181,7 +183,7 @@ async function createForwardContractOnChain(
       algosdk.decodeAddress(input.oracleAddress).publicKey,
       textEncoder.encode(input.cropName),
       algosdk.encodeUint64(input.quantity),
-      algosdk.encodeUint64(input.agreedPrice),
+      algosdk.encodeUint64(agreedPriceMicro),
     ],
     suggestedParams: params,
   });
@@ -202,10 +204,11 @@ async function acceptContractOnChain(
   const params = await algodClient.getTransactionParams().do();
   const appAddress = algosdk.getApplicationAddress(input.contractId);
 
+  const depositedMicroAlgos = algoToMicroAlgos(input.depositedAmount);
   const paymentTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
     sender: userAddress,
     receiver: appAddress,
-    amount: input.depositedAmount,
+    amount: depositedMicroAlgos,
     suggestedParams: params,
   });
 
@@ -230,10 +233,11 @@ async function updatePriceOnChain(
   userAddress: string
 ): Promise<{ txnId: string }> {
   const params = await algodClient.getTransactionParams().do();
+  const currentPriceMicro = algoToMicroAlgos(input.currentPrice);
   const callTxn = algosdk.makeApplicationNoOpTxnFromObject({
     sender: userAddress,
     appIndex: input.contractId,
-    appArgs: [textEncoder.encode("update_price"), algosdk.encodeUint64(input.currentPrice)],
+    appArgs: [textEncoder.encode("update_price"), algosdk.encodeUint64(currentPriceMicro)],
     suggestedParams: params,
   });
 

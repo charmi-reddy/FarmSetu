@@ -6,6 +6,7 @@ interface TransactionHistoryProps {
 
 function TransactionHistory({ transactions }: TransactionHistoryProps) {
   const formatTime = (timestamp: number) => new Date(timestamp).toLocaleString();
+  const explorerBaseUrl = (import.meta.env.VITE_EXPLORER_BASE_URL || "https://testnet.algoexplorer.io").replace(/\/$/, "");
 
   const getTypeLabel = (type: ContractTransaction["type"]) => {
     const labels: Record<ContractTransaction["type"], string> = {
@@ -42,7 +43,20 @@ function TransactionHistory({ transactions }: TransactionHistoryProps) {
             {transactions.map((tx) => (
               <tr key={tx.id} className="hover:bg-green-50/50">
                 <td className="px-6 py-4 text-sm font-semibold text-slate-900">{getTypeLabel(tx.type)}</td>
-                <td className="px-6 py-4 text-sm text-slate-600">{tx.contractId === 0 ? "New" : `#${tx.contractId}`}</td>
+                <td className="px-6 py-4 text-sm text-slate-600">
+                  {tx.contractId === 0 ? (
+                    "New"
+                  ) : (
+                    <a
+                      href={`${explorerBaseUrl}/application/${tx.contractId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-green-700 hover:underline"
+                    >
+                      #{tx.contractId}
+                    </a>
+                  )}
+                </td>
                 <td className="px-6 py-4 text-sm text-slate-600">{formatTime(tx.timestamp)}</td>
                 <td className="px-6 py-4">
                   <span
@@ -58,7 +72,18 @@ function TransactionHistory({ transactions }: TransactionHistoryProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-xs text-slate-600">
-                  {tx.txnId ? tx.txnId.slice(0, 18) + "..." : tx.error || "-"}
+                  {tx.txnId ? (
+                    <a
+                      href={`${explorerBaseUrl}/tx/${tx.txnId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-green-700 hover:underline"
+                    >
+                      {tx.txnId.slice(0, 18)}...
+                    </a>
+                  ) : (
+                    tx.error || "-"
+                  )}
                 </td>
               </tr>
             ))}

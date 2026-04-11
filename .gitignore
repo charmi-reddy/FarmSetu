@@ -63,6 +63,5 @@ artifacts/
 .vscode/
 !.vscode/extensions.json
 .idea/
-
-FI.md
-QUICK_SETUP.md
+*.orig
+*.rej
