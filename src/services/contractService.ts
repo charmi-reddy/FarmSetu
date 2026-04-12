@@ -17,6 +17,7 @@ const KNOWN_APP_IDS_KEY = "farmsetu_known_app_ids";
 const ADDRESS_REGEX = /^[A-Z2-7]{58}$/;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
+const FACTORY_APP_ID = Number(import.meta.env.VITE_FACTORY_APP_ID || 1007);
 
 type SignerTransaction = { txn: algosdk.Transaction; signers?: string[]; authAddr?: string };
 
@@ -173,6 +174,8 @@ async function createForwardContractOnChain(
 
   const params = await algodClient.getTransactionParams().do();
   const agreedPriceMicro = algoToMicroAlgos(input.agreedPrice);
+  
+  // 1. Deploy the Forward Contract
   const createTxn = algosdk.makeApplicationCreateTxnFromObject({
     sender: userAddress,
     approvalProgram,
@@ -196,6 +199,28 @@ async function createForwardContractOnChain(
   const confirmed = await waitConfirmed(txId);
   const appId = Number(confirmed.applicationIndex);
   rememberAppId(appId);
+
+  // 2. Factory Registration (ABI Encoded)
+  // Maps directly to TEALScript: registerTrade(contractId: uint64, seller: Address)
+  const registerMethod = algosdk.ABIMethod.fromSignature("registerTrade(uint64,address)void");
+  
+  const factoryTxn = algosdk.makeApplicationNoOpTxnFromObject({
+    sender: userAddress,
+    appIndex: FACTORY_APP_ID,
+    appArgs: [
+      registerMethod.getSelector(),
+      algosdk.encodeUint64(appId),                     // FIX: Bypass ABI generic, use native uint64 encoder
+      algosdk.decodeAddress(userAddress).publicKey     // FIX: Bypass ABI generic, use native address decoder
+    ],
+    // Box reference required for the Factory's BoxMap storage
+    boxes: [
+      { appIndex: FACTORY_APP_ID, name: algosdk.encodeUint64(appId) }
+    ],
+    suggestedParams: params,
+  });
+
+  // Execute Factory Registration
+  await sendTransactions(wallet, [{ txn: factoryTxn }], userAddress);
 
   return { appId, txnId: txId, confirmedRound: toRound(confirmed.confirmedRound) };
 }
